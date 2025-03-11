@@ -1,0 +1,47 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio cache/options directory
+.vs/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio auto-generated files
+_ReSharper*/
+*.ReSharper*
+*.DotSettings.user
+
+# NuGet Packages
+packages/
+*.nupkg
+
+# Build results
+*.exe
+*.pdb
+*.dll
+*.cache
+
+# Project-specific directories
+input-files/
+emboss/
+mailer/
+
+# Documentation
+overview.md
+changelog.md
+feature-sample.txt
+
+# IDE
+.idea/
+*.swp
+*.*~
+project.lock.json
+.project
+.DS_Store*
