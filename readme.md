@@ -1,46 +1,17 @@
 # AEON Name Sorting
 
-A Windows Forms application for sorting AEON card holder data files alphabetically by the cardholder's first name.
+Simple Windows Forms app to sort cardholder data files by name.
 
-## Features
+## How it Works
 
-- Processes multiple files simultaneously
-- Supports both emboss and mailer file formats
-- Alphabetical sorting based on first name
-- Preserves original line formatting and sequence numbers
-- Creates separate output folders for emboss and mailer files
-- Appends "-sorted" suffix to output filenames
+1. Click "Select Files" to choose your .txt files
+2. App will sort the files by name (alphabetically)
+3. Sorted files are saved in:
+   - `mailer/` folder for files with "_M_N_" in name
+   - `emboss/` folder for all other files
+4. Output files have "-sorted" added to their names
 
-## Supported File Formats
-
-1. Emboss Files
-   - Filename pattern: `EM011SNX_[numbers].txt`
-   - Example: `EM011SNX_525629.txt`
-
-2. Mailer Files
-   - Filename pattern: `EM011SNX_M_N_[numbers].txt`
-   - Example: `EM011SNX_M_N_525629.txt`
-
-## Usage
-
-1. Launch the application
-2. Click "Select Files" button
-3. Choose one or more input files
-4. Wait for processing to complete
-   - Files are validated
-   - Names are sorted alphabetically
-   - Original formatting is preserved
-5. Find sorted files in output folders:
-   - `emboss/` for emboss files
-   - `mailer/` for mailer files
-
-Example:
-```
-Input:  EM011SNX_525629.txt
-Output: emboss/EM011SNX_525629-sorted.txt
-```
-
-## Requirements
-
-- Windows operating system
-- .NET Framework
+## Notes
+- Name field starts at column 61 in each line
+- Original data format is preserved
+- Files are sorted case-insensitive
