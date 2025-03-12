@@ -2,12 +2,13 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace aeon_name_sorting
 {
     public partial class Form1 : Form
     {
-        private const string MAILER_PATTERN = @"_M_N_";
+        private const string MAILER_PATTERN = @"(_M_N_|_Sup_Only_)";
         private readonly OpenFileDialog openFileDialog;
 
         public Form1()
@@ -54,7 +55,7 @@ namespace aeon_name_sorting
                 foreach (var file in files)
                 {
                     var fileName = Path.GetFileName(file);
-                    if (fileName.Contains(MAILER_PATTERN))
+                    if (Regex.IsMatch(fileName, MAILER_PATTERN))
                         mailerFiles.Add(file);
                     else
                         embossFiles.Add(file);
@@ -64,19 +65,14 @@ namespace aeon_name_sorting
                 var totalFiles = embossFiles.Count + mailerFiles.Count;
                 var processedFiles = 0;
 
-                // Create output directories
-                var baseDir = Path.GetDirectoryName(files[0]);
-                var embossDir = Path.Combine(baseDir!, "emboss");
-                var mailerDir = Path.Combine(baseDir!, "mailer");
-
-                Directory.CreateDirectory(embossDir);
-                Directory.CreateDirectory(mailerDir);
-
                 // Process emboss files
                 foreach (var file in embossFiles)
                 {
+                    var outputDir = Path.Combine(Path.GetDirectoryName(file)!, "sorted-outputs");
+                    Directory.CreateDirectory(outputDir);
+                    
                     UpdateStatus($"Processing emboss file: {Path.GetFileName(file)}");
-                    await ProcessFile(file, embossDir);
+                    await ProcessFile(file, outputDir);
                     processedFiles++;
                     UpdateProgress((int)((float)processedFiles / totalFiles * 100));
                 }
@@ -84,8 +80,11 @@ namespace aeon_name_sorting
                 // Process mailer files
                 foreach (var file in mailerFiles)
                 {
+                    var outputDir = Path.Combine(Path.GetDirectoryName(file)!, "sorted-outputs");
+                    Directory.CreateDirectory(outputDir);
+                    
                     UpdateStatus($"Processing mailer file: {Path.GetFileName(file)}");
-                    await ProcessFile(file, mailerDir);
+                    await ProcessFile(file, outputDir);
                     processedFiles++;
                     UpdateProgress((int)((float)processedFiles / totalFiles * 100));
                 }
@@ -111,16 +110,35 @@ namespace aeon_name_sorting
             // Read all lines
             var lines = await File.ReadAllLinesAsync(inputFile);
 
-            // Sort lines based on the name field only
-            Array.Sort(lines, (a, b) =>
+            // Split lines into sequence and data parts
+            var splitLines = lines.Select(line =>
             {
-                var nameA = ExtractName(a);
-                var nameB = ExtractName(b);
+                var firstDot = line.IndexOf('.');
+                return new
+                {
+                    OriginalSequence = line.Substring(0, firstDot + 1),
+                    Data = line.Substring(firstDot + 1),
+                    OriginalLine = line
+                };
+            }).ToArray();
+
+            // Sort based on names while keeping original data
+            Array.Sort(splitLines, (a, b) =>
+            {
+                var nameA = ExtractName(a.OriginalLine);
+                var nameB = ExtractName(b.OriginalLine);
                 return string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
             });
 
+            // Recombine with sequential numbers
+            var sortedLines = splitLines.Select((x, index) =>
+            {
+                var newSequence = $"{(index + 1):000000}.";
+                return newSequence + x.Data;
+            }).ToArray();
+
             // Write the sorted lines
-            await File.WriteAllLinesAsync(outputFile, lines);
+            await File.WriteAllLinesAsync(outputFile, sortedLines);
         }
 
         private string ExtractName(string line)
