@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace aeon_name_sorting
 {
@@ -111,16 +112,35 @@ namespace aeon_name_sorting
             // Read all lines
             var lines = await File.ReadAllLinesAsync(inputFile);
 
-            // Sort lines based on the name field only
-            Array.Sort(lines, (a, b) =>
+            // Split lines into sequence and data parts
+            var splitLines = lines.Select(line =>
             {
-                var nameA = ExtractName(a);
-                var nameB = ExtractName(b);
+                var firstDot = line.IndexOf('.');
+                return new
+                {
+                    OriginalSequence = line.Substring(0, firstDot + 1),
+                    Data = line.Substring(firstDot + 1),
+                    OriginalLine = line
+                };
+            }).ToArray();
+
+            // Sort based on names while keeping original data
+            Array.Sort(splitLines, (a, b) =>
+            {
+                var nameA = ExtractName(a.OriginalLine);
+                var nameB = ExtractName(b.OriginalLine);
                 return string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
             });
 
+            // Recombine with sequential numbers
+            var sortedLines = splitLines.Select((x, index) =>
+            {
+                var newSequence = $"{(index + 1):000000}.";
+                return newSequence + x.Data;
+            }).ToArray();
+
             // Write the sorted lines
-            await File.WriteAllLinesAsync(outputFile, lines);
+            await File.WriteAllLinesAsync(outputFile, sortedLines);
         }
 
         private string ExtractName(string line)
