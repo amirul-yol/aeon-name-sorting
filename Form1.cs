@@ -8,7 +8,7 @@ namespace aeon_name_sorting
 {
     public partial class Form1 : Form
     {
-        private const string MAILER_PATTERN = @"_M_N_";
+        private const string MAILER_PATTERN = @"(_M_N_|_Sup_Only_)";
         private readonly OpenFileDialog openFileDialog;
 
         public Form1()
@@ -55,7 +55,7 @@ namespace aeon_name_sorting
                 foreach (var file in files)
                 {
                     var fileName = Path.GetFileName(file);
-                    if (fileName.Contains(MAILER_PATTERN))
+                    if (Regex.IsMatch(fileName, MAILER_PATTERN))
                         mailerFiles.Add(file);
                     else
                         embossFiles.Add(file);
@@ -65,19 +65,14 @@ namespace aeon_name_sorting
                 var totalFiles = embossFiles.Count + mailerFiles.Count;
                 var processedFiles = 0;
 
-                // Create output directories
-                var baseDir = Path.GetDirectoryName(files[0]);
-                var embossDir = Path.Combine(baseDir!, "emboss");
-                var mailerDir = Path.Combine(baseDir!, "mailer");
-
-                Directory.CreateDirectory(embossDir);
-                Directory.CreateDirectory(mailerDir);
-
                 // Process emboss files
                 foreach (var file in embossFiles)
                 {
+                    var outputDir = Path.Combine(Path.GetDirectoryName(file)!, "sorted-outputs");
+                    Directory.CreateDirectory(outputDir);
+                    
                     UpdateStatus($"Processing emboss file: {Path.GetFileName(file)}");
-                    await ProcessFile(file, embossDir);
+                    await ProcessFile(file, outputDir);
                     processedFiles++;
                     UpdateProgress((int)((float)processedFiles / totalFiles * 100));
                 }
@@ -85,8 +80,11 @@ namespace aeon_name_sorting
                 // Process mailer files
                 foreach (var file in mailerFiles)
                 {
+                    var outputDir = Path.Combine(Path.GetDirectoryName(file)!, "sorted-outputs");
+                    Directory.CreateDirectory(outputDir);
+                    
                     UpdateStatus($"Processing mailer file: {Path.GetFileName(file)}");
-                    await ProcessFile(file, mailerDir);
+                    await ProcessFile(file, outputDir);
                     processedFiles++;
                     UpdateProgress((int)((float)processedFiles / totalFiles * 100));
                 }
